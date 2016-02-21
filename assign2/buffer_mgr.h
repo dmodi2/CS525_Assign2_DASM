@@ -3,6 +3,7 @@
 
 // Include return codes and methods for logging errors
 #include "dberror.h"
+#include "storage_mgr.h"
 
 // Include bool DT
 #include "dt.h"
@@ -33,6 +34,17 @@ typedef struct BM_PageHandle {
   char *data;
 } BM_PageHandle;
 
+// Linked list to store pages from pagefile in memory.
+typedef struct pageList{
+    SM_PageHandle data;
+    int dirtyBit;
+    int fixCount;
+    PageNumber pgNum;
+    int useCount;
+    struct pageList *next;
+    struct pageList *prev;
+}pageListT;
+
 // convenience macros
 #define MAKE_POOL()					\
   ((BM_BufferPool *) malloc (sizeof(BM_BufferPool)))
@@ -41,11 +53,13 @@ typedef struct BM_PageHandle {
   ((BM_PageHandle *) malloc (sizeof(BM_PageHandle)))
 
 // Buffer Manager Interface Pool Handling
-RC initBufferPool(BM_BufferPool *const bm, const char *const pageFileName, 
+RC initBufferPool(BM_BufferPool *const bm, char *pageFileName, 
 		  const int numPages, ReplacementStrategy strategy, 
 		  void *stratData);
 RC shutdownBufferPool(BM_BufferPool *const bm);
 RC forceFlushPool(BM_BufferPool *const bm);
+RC initPageFrame(pageListT** head_ref);
+//void printlist(pageListT* node);
 
 // Buffer Manager Interface Access Pages
 RC markDirty (BM_BufferPool *const bm, BM_PageHandle *const page);
