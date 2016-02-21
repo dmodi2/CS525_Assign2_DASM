@@ -2,7 +2,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 
-// Imported libraries
+// Local libraries
 #include "buffer_mgr.h"
 #include "storage_mgr.h"
 
@@ -85,9 +85,11 @@ RC shutdownBufferPool(BM_BufferPool *const bm){
   while(node != NULL){
 	  if(node->fixCount != 0)
 	    return RC_BUFFER_POOL_CONTAINS_PINNED_PAGES;
+	  node = node->next;  
   }
   forceFlushPool(bm);
   free(node);
+  bm->mgmtData = NULL;
   free(bm);
   return RC_OK;
 }
@@ -111,6 +113,53 @@ RC forceFlushPool(BM_BufferPool *const bm){
 	    writeBlock(node->pgNum, &fHandle, node->data);
 	    node->dirtyBit = 0;
 	  }
+	  node = node->next;
   }
+  closePageFile(&fHandle);
+  return RC_OK;
+}
+/**
+ * markDirty
+ * */
+RC markDirty (BM_BufferPool *const bm, BM_PageHandle *const page){
+	
+  if(bm == NULL){
+	return RC_BUFFER_POOL_NOT_INIT;
+  }
+
+  pageListT *node = (pageListT *)bm->mgmtData;
+  
+  while(node->pgNum != page->pageNum){
+	  node = node->next;
+  }
+  if(node == NULL)
+    return RC_PAGE_NOT_PINNED_IN_BUFFER_POOL;
+    
+  node->dirtyBit = 1;
+  return RC_OK;
+}
+/**
+ * forcePage
+ * */
+RC forcePage (BM_BufferPool *const bm, BM_PageHandle *const page){
+
+  if(bm == NULL){
+	  return RC_BUFFER_POOL_NOT_INIT;
+  }
+  
+  pageListT *node = (pageListT *)bm->mgmtData;
+  SM_FileHandle fHandle;
+  
+  while(node->pgNum != page->pageNum){
+	  node = node->next;
+  }
+  if(node == NULL)
+    return RC_PAGE_NOT_PINNED_IN_BUFFER_POOL;
+    
+  openPageFile(bm->pageFile, &fHandle);
+  writeBlock(node->pgNum, &fHandle, node->data);
+  closePageFile(&fHandle);
+  node->dirtyBit = 0;  
+  
   return RC_OK;
 }
