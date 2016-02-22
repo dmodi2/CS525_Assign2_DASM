@@ -40,7 +40,8 @@ typedef struct pageList{
     int dirtyBit;
     int fixCount;
     PageNumber pgNum;
-    int useCount;
+    int readCount;
+    int writeCount;
     struct pageList *next;
     struct pageList *prev;
 }pageListT;

@@ -14,6 +14,8 @@ int main(){
 	return 0;
 }
 
+int front, last;
+
 /**
  * initBufferPool
  * */
@@ -163,3 +165,76 @@ RC forcePage (BM_BufferPool *const bm, BM_PageHandle *const page){
   
   return RC_OK;
 }
+
+/**
+ * FIFO
+ * */
+ 
+extern void FIF0(BM_BufferPool *const bm, pageListT *pageT, const int numPages){
+	
+	
+	pageListT *node = (pageListT *)bm->mgmtData;
+	
+	int bufferSize = numPages;
+	
+	
+	front=last%bufferSize;
+	
+	for( int i=0; i<bufferSize; i++)
+	{
+		if(node[front].fixCount == 0)
+		{
+			if(node[front].dirtyBit == 1)
+			{
+				SM_FileHandle fHandle;
+				openPageFile(bm->pageFile, &fHandle);
+				writeBlock(node[front].pageNum, &fHandle, node[front].data);
+				mgmtData->writeCount++;
+			}
+			
+			node[front].data = pageT->data;
+			node[front].pageNum = pageT->pageNum;
+			node[front].dirtyBit = pageT->dirtyBit;
+			node[front].fixCount = pageT->fixCount;
+			break;
+		}
+		else
+		{
+			front++;
+			front = (front % bufferSize == 0) ? 0 : front; 
+		}
+  	}
+ }
+ 
+ 
+extern int getNumReadIO (BM_BufferPool *const bm){
+	
+	if(bm->mgmtData == NULL)dd
+	{
+		return false;
+	}
+	else
+	{
+		pageListT *node = (pageListT *)bm->mgmtData;
+		return node->readCount;	
+	}
+
+extern int getNumWriteIO (BM_BufferPool *const bm){
+	
+	if(bm->mgmtData == NULL)
+	{
+		return false;
+	}
+	else
+	{
+		pageListT *node = (pageListT *)bm->mgmtData;
+		return node->writeCount;	
+	}
+
+}
+	
+ 
+ 
+
+
+
