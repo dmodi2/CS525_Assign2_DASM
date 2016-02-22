@@ -58,6 +58,8 @@ RC initPageFrame(pageListT** head_ref){
     node->dirtyBit = 0;
     node->pgNum = NO_PAGE;
     node->useCount = 0;
+    node->readCount=0;
+    node->writeCount=0;
     node->next = (*head_ref);
     (*head_ref)->prev = node;
     (*head_ref) = node;
@@ -170,71 +172,32 @@ RC forcePage (BM_BufferPool *const bm, BM_PageHandle *const page){
  * FIFO
  * */
  
-extern void FIF0(BM_BufferPool *const bm, pageListT *pageT, const int numPages){
-	
+extern void FIF0(BM_BufferPool *const bm, pageListT *pageT){
 	
 	pageListT *node = (pageListT *)bm->mgmtData;
-	
-	int bufferSize = numPages;
-	
-	
-	front=last%bufferSize;
-	
-	for( int i=0; i<bufferSize; i++)
-	{
-		if(node[front].fixCount == 0)
-		{
-			if(node[front].dirtyBit == 1)
+	SM_FileHandle fHandle;
+  	while( node!= NULL)
+  	{	
+		if(node->fixCount == 0)
+		{	
+			/* If the page is modified by the client, then write the page to disk*/
+			if(node->dirtyBit == 1)
 			{
-				SM_FileHandle fHandle;
 				openPageFile(bm->pageFile, &fHandle);
-				writeBlock(node[front].pageNum, &fHandle, node[front].data);
-				mgmtData->writeCount++;
+				writeBlock(node->pgNum, &fHandle, node->data);
 			}
-			
-			node[front].data = pageT->data;
-			node[front].pageNum = pageT->pageNum;
-			node[front].dirtyBit = pageT->dirtyBit;
-			node[front].fixCount = pageT->fixCount;
+			/* Assigning the new page contents*/
+			node->data = pageT -> data;
+			node->pgNum = pageT -> pgNum;
+			node->dirtyBit = pageT -> dirtyBit;
+			node->fixCount = pageT -> fixCount;
 			break;
 		}
-		else
-		{
-			front++;
-			front = (front % bufferSize == 0) ? 0 : front; 
-		}
-  	}
- }
- 
- 
-extern int getNumReadIO (BM_BufferPool *const bm){
-	
-	if(bm->mgmtData == NULL)dd
-	{
-		return false;
+		node = node->next;
 	}
-	else
-	{
-		pageListT *node = (pageListT *)bm->mgmtData;
-		return node->readCount;	
-	}
-
-extern int getNumWriteIO (BM_BufferPool *const bm){
-	
-	if(bm->mgmtData == NULL)
-	{
-		return false;
-	}
-	else
-	{
-		pageListT *node = (pageListT *)bm->mgmtData;
-		return node->writeCount;	
-	}
-
+	closePageFile(&fHandle);
+	node->dirtyBit=0;
+	node->fixCount=0;
 }
-	
  
  
-
-
-

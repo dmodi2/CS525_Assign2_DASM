@@ -42,6 +42,7 @@ typedef struct pageList{
     PageNumber pgNum;
     int readCount;
     int writeCount;
+    int useCount;
     struct pageList *next;
     struct pageList *prev;
 }pageListT;
