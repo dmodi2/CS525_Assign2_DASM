@@ -49,6 +49,47 @@ extern RC FIF0(BM_BufferPool *const bm, pageListT *pageT){
 	return RC_OK;
 }
 
+
+/**
+ * clock
+ * */
+ 
+extern RC clock(BM_BufferPool *const bm, pageListT *pageT){
+	
+	if(bm == NULL){
+	  return RC_BUFFER_POOL_NOT_INIT;
+    }
+    
+    pageListT *node = (pageListT *)bm->mgmtData;
+	SM_FileHandle fHandle;
+	
+	while(true)
+	{
+		if(node->useCount == 1) 
+		{
+			if(node->dirtyBit == 1)
+			{
+				openPageFile(bm->pageFile, &fHandle);
+				writeBlock(node->pgNum, &fHandle, node->data);
+				closePageFile(&fHandle);
+			}
+			node->data = pageT -> data;
+			node->pgNum = pageT -> pgNum;
+			node->fixCount = pageT -> fixCount;
+			node->dirtyBit = 0;
+			node->useCount = 0;
+			node = node->next;
+			return RC_OK;
+		}
+		else
+		{
+			node->useCount = 0;
+			node = node->next;
+		}
+	}
+}
+
+
 /**
  * initBufferPool
  * */
@@ -273,3 +314,8 @@ RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page,
 		}
 	}		
 }
+
+
+
+
+
