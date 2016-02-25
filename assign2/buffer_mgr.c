@@ -263,10 +263,12 @@ RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page,
 			if(readError == RC_READ_ERROR)
 		      return RC_READ_ERROR;
 		      
+		    // Implement replacement startegy  
 			if(bm->strategy == RS_FIFO)
 			  FIF0(bm, newNode);
 			else if(bm->strategy == RS_LRU);
 			  //implement LRU
+			  
 			page->pageNum = pageNum;
 			page->data = newNode->data;  
 			return RC_OK;
