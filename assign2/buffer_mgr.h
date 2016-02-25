@@ -40,11 +40,8 @@ typedef struct pageList{
     int dirtyBit;
     int fixCount;
     PageNumber pgNum;
-    int readCount;
-    int writeCount;
     int useCount;
     struct pageList *next;
-    struct pageList *prev;
 }pageListT;
 
 // convenience macros

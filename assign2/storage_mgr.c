@@ -129,6 +129,7 @@ extern RC openPageFile (char *fileName, SM_FileHandle *fHandle){
   fHandle->curPagePos = 0;
   fseek(fp, 0L, SEEK_END);
   fHandle->totalNumPages = (int) ftell(fp)/PAGE_SIZE;
+  printf("End: openPageFile\n");
   
   return RC_OK;
 }

@@ -22,4 +22,4 @@ buffer_mgr_stat.o: buffer_mgr_stat.c
 	$(CC) -o buffer_mgr_stat.o -c buffer_mgr_stat.c
    
 clean:
-	rm *.o
+	rm *.o assign2_1 op.txt
