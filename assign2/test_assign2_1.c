@@ -44,11 +44,11 @@ main (void)
 {
   initStorageManager();
   testName = "";
-
-  testCreatingAndReadingDummyPages();
-  testReadPage();
-  //testFIFO();
-  //testLRU();
+  
+  testCreatingAndReadingDummyPages(); //PARTIAL
+  testReadPage(); //DONE
+  testFIFO(); //DONE
+  //testLRU(); //PENDING
 }
 
 // create n pages with content "Page X" and read them back to check whether the content is right
@@ -60,8 +60,8 @@ testCreatingAndReadingDummyPages (void)
 
   CHECK(createPageFile("testbuffer.bin"));
 
-  createDummyPages(bm, 22);
-  //checkDummyPages(bm, 20);
+  createDummyPages(bm, 22); //DONE
+  checkDummyPages(bm, 20);  //DONE
 
   //createDummyPages(bm, 10000);
   //checkDummyPages(bm, 10000);

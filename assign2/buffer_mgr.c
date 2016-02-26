@@ -12,8 +12,9 @@
 	initBufferPool(bm, "testbuffer.bin", 3, RS_FIFO, NULL);
 	return 0;
 }*/
-void test(BM_BufferPool *const bm);
+
 int readCount = 0, writeCount = 0;
+pageListT *head = NULL;
 
 /***Replacement stratagies implementation****/
 /**
@@ -26,33 +27,41 @@ extern RC FIF0(BM_BufferPool *const bm, pageListT *pageT){
 	if(bm == NULL){
 	  return RC_BUFFER_POOL_NOT_INIT;
     }
-    
-	pageListT *node = (pageListT *)bm->mgmtData;
-	SM_FileHandle fHandle;
-  	while( node!= NULL)
-  	{	
-		if(node->fixCount == 0)
-		{	
-			/* If the page is modified by the client, then write the page to disk*/
-			if(node->dirtyBit == 1)
-			{
-				openPageFile(bm->pageFile, &fHandle);
-				writeBlock(node->pgNum, &fHandle, node->data);
-			
-			}
-			/* Assigning the new page contents*/
-			node->data = pageT->data;
-			printf("FIFO: page pushed out : %d\n", node->pgNum);
-			node->pgNum = pageT->pgNum;
-			printf("FIFO: page pushed in : %d\n", node->pgNum);
-			node->dirtyBit = 0;
-			node->fixCount = 1;
-			writeCount++;
-			return RC_OK;
-		}
+    pageListT *node = (pageListT *)bm->mgmtData;
+  printf("FIFO: Pages in memory.\n");
+  while(node != NULL){
+		printf("%d\n",node->pgNum);
 		node = node->next;
 	}
-	return RC_OK;
+	node = (pageListT *)bm->mgmtData;
+    SM_FileHandle fHandle;
+    while(node != NULL){
+	  if(node->fifoBit == 1){
+		  if(node->fixCount == 0){
+		     /* If the page is modified by the client, then write the page to disk*/
+			 if(node->dirtyBit == 1)
+			 {
+				openPageFile(bm->pageFile, &fHandle);
+		   		writeBlock(node->pgNum, &fHandle, node->data);
+		   		writeCount++;
+			 }
+			 node->data = pageT->data;
+			 node->pgNum = pageT->pgNum;
+			 node->dirtyBit = 0;
+			 node->fifoBit = 0;
+			 if(node->next == NULL){
+			   head->fifoBit = 1;
+		     }else{
+			   node->next->fifoBit = 1;	
+			 }
+			 node->fixCount = 1;
+			 return RC_OK;
+		}
+		node->next->fifoBit = 1;
+	  }
+      node = node->next;
+    }	
+	return RC_NO_UNPINNED_PAGES_IN_BUFFER_POOL;
 }
 
 /**
@@ -75,6 +84,7 @@ extern RC clock(BM_BufferPool *const bm, pageListT *pageT){
 			{
 				openPageFile(bm->pageFile, &fHandle);
 				writeBlock(node->pgNum, &fHandle, node->data);
+				writeCount++;
 				closePageFile(&fHandle);
 			}
 			node->data = pageT -> data;
@@ -83,7 +93,6 @@ extern RC clock(BM_BufferPool *const bm, pageListT *pageT){
 			node->dirtyBit = 0;
 			node->useCount = 0;
 			node = node->next;
-			writeCount++;
 			return RC_OK;
 		}
 		else
@@ -135,40 +144,50 @@ extern RC clock(BM_BufferPool *const bm, pageListT *pageT){
 RC initBufferPool(BM_BufferPool *const bm, char *pageFileName, 
 					const int numPages, ReplacementStrategy strategy, 
 					void *stratData){
+  head = (pageListT *)malloc(sizeof(pageListT));						
   bm->pageFile = pageFileName;
   bm->numPages = numPages;
   bm->strategy = strategy;
+  writeCount = 0;
+  readCount = 0;
   
+   // Initilize head of the page frame.  
+    head->data = NULL;
+    head->fixCount = 0;
+    head->dirtyBit = 0;
+    head->fifoBit = 1;
+    head->pgNum = NO_PAGE;
+    head->next = NULL;
+    
   int bufferSize = numPages;
   
-  pageListT *node = NULL;
-  while(bufferSize > 0){
-    initPageFrame(&node);
+  //pageListT *node = NULL;
+  while(bufferSize > 1){
+    initPageFrame(head);
     bufferSize--;
   }
-  bm->mgmtData = node;
-  //test(bm);
+  //bm->mgmtData = node;
+  bm->mgmtData = head;
   return RC_OK; 
 }
 
 /**
  * initPageFrame
  * */
-RC initPageFrame(pageListT** head_ref){
+RC initPageFrame(pageListT* head_ref){
 	
 	//Represents a page in a frame.
-    pageListT* node = (pageListT *)malloc(sizeof(pageListT));
-      
-    // Initilize empty page frame.  
-    node->data = NULL;
-    node->fixCount = 0;
-    node->dirtyBit = 0;
-    node->pgNum = NO_PAGE;
-    // Linked list pointers.
-    node->next = (*head_ref);
-    (*head_ref) = node;
-    
-    return RC_OK;
+    pageListT* current = head_ref;
+    while(current->next != NULL){
+		current = current->next;
+	}
+	current->next = (pageListT *)malloc(sizeof(pageListT));
+	current->next->data = NULL;
+	current->next->fixCount = 0;
+	current->next->dirtyBit = 0;
+	current->next->fifoBit = 0;
+	current->next->pgNum = NO_PAGE;
+	current->next->next = NULL;
 }
 
 /**
@@ -192,7 +211,6 @@ RC shutdownBufferPool(BM_BufferPool *const bm){
   forceFlushPool(bm);
   free(node);
   bm->mgmtData = NULL;
-  //free(bm);
   return RC_OK;
 }
 
@@ -220,7 +238,6 @@ RC forceFlushPool(BM_BufferPool *const bm){
 	  node = node->next;
   }
   printf("forceFlushPool\n");
-  //closePageFile(&fHandle);
   return RC_OK;
 }
 /**
@@ -233,12 +250,6 @@ RC markDirty (BM_BufferPool *const bm, BM_PageHandle *const page){
 	return RC_BUFFER_POOL_NOT_INIT;
   }
   pageListT *node = (pageListT *)bm->mgmtData;
-  while(node != NULL){
-		printf("markDirty: Page num: %d\n",node->pgNum);
-		node = node->next;
-	}
-	node = (pageListT *)bm->mgmtData;
-  
   while(node != NULL){
 	  if(node->pgNum == page->pageNum){
 		node->data = page->data;  
@@ -267,12 +278,12 @@ RC forcePage (BM_BufferPool *const bm, BM_PageHandle *const page){
   }
   if(node == NULL)
     return RC_PAGE_NOT_PINNED_IN_BUFFER_POOL;
-    
-  openPageFile(bm->pageFile, &fHandle);
-  writeBlock(node->pgNum, &fHandle, node->data);
-  closePageFile(&fHandle);
-  node->dirtyBit = 0;  
-  writeCount++;
+  if(node->dirtyBit == 1){  
+    openPageFile(bm->pageFile, &fHandle);
+    writeBlock(node->pgNum, &fHandle, node->data);
+    node->dirtyBit = 0;  
+    writeCount++;
+  }
   
   return RC_OK;
 }
@@ -302,23 +313,21 @@ RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page,
 		if(readError == RC_READ_ERROR){
 		  return readError;
 	    }
+	    readCount++;
 		node->pgNum = pageNum;
 		node->fixCount++;
 		page->pageNum = pageNum;
 		page->data = node->data;
-		readCount++;
 		closePageFile(&fHandle);
 		return RC_OK;
 	}else{
 		while(node != NULL && node->pgNum != NO_PAGE){
-			//printf("Page number: %d\n",node->pgNum);
 		  // Page already exist in memory	
 		  if(node->pgNum == pageNum){
 			  printf("pinPage: page already exists in memory\n");
 			  node->fixCount++;
 			  page->pageNum = pageNum;
 			  page->data = node->data;
-			  readCount++;
 			  return RC_OK;
 		  }
 		  node = node->next; 
@@ -333,12 +342,11 @@ RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page,
 			if(readError == RC_READ_ERROR){
 			  return readError;
 		    }
-	  
+	        readCount++;
 			node->pgNum = pageNum;
 			node->fixCount++;
 			page->pageNum = pageNum;
 			page->data = node->data;
-			readCount++;
 			return RC_OK;
 		}
 		// Page not in memory and buffer full. Replace page
@@ -350,10 +358,10 @@ RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page,
 			newNode->data = (SM_PageHandle)malloc(PAGE_SIZE);
 			readError = readBlock(pageNum, &fHandle, newNode->data);
 			newNode->pgNum = pageNum;
-			if(readError == RC_READ_ERROR)
+			if(readError == RC_READ_ERROR){
 		      return RC_READ_ERROR;
-		    
-		      
+		    }
+		    readCount++;
 		    // Implement replacement startegy  
 			if(bm->strategy == RS_FIFO)
 			  FIF0(bm, newNode);
@@ -361,10 +369,9 @@ RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page,
 			  clock(bm, newNode);
 			else if(bm->strategy == RS_LRU);
 			  //call to LRU
-
 			page->pageNum = pageNum;
 			page->data = newNode->data;  
-			readCount++;
+			
 			return RC_OK;
 		}
 	}		

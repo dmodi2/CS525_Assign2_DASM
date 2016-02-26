@@ -41,6 +41,7 @@ typedef struct pageList{
     int fixCount;
     PageNumber pgNum;
     int useCount;
+    int fifoBit;
     struct pageList *next;
 }pageListT;
 
@@ -57,7 +58,8 @@ RC initBufferPool(BM_BufferPool *const bm, char *pageFileName,
 		  void *stratData);
 RC shutdownBufferPool(BM_BufferPool *const bm);
 RC forceFlushPool(BM_BufferPool *const bm);
-RC initPageFrame(pageListT** head_ref);
+//RC initPageFrame(pageListT** head_ref);
+RC initPageFrame(pageListT* head_ref);
 //void printlist(pageListT* node);
 
 // Buffer Manager Interface Access Pages

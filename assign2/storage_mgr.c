@@ -148,7 +148,6 @@ extern RC closePageFile (SM_FileHandle *fHandle){
 	
 	int error;
 	if(fHandle->mgmtInfo == NULL){
-		printf("closePageFile\n");
 		return RC_FILE_HANDLE_NOT_INIT;
 	}
 	error = fclose(fHandle->mgmtInfo);
