@@ -129,7 +129,6 @@ extern RC openPageFile (char *fileName, SM_FileHandle *fHandle){
   fHandle->curPagePos = 0;
   fseek(fp, 0L, SEEK_END);
   fHandle->totalNumPages = (int) ftell(fp)/PAGE_SIZE;
-  
   return RC_OK;
 }
 
@@ -148,7 +147,8 @@ extern RC openPageFile (char *fileName, SM_FileHandle *fHandle){
 extern RC closePageFile (SM_FileHandle *fHandle){
 	
 	int error;
-	if(fHandle == NULL){
+	if(fHandle->mgmtInfo == NULL){
+		printf("closePageFile\n");
 		return RC_FILE_HANDLE_NOT_INIT;
 	}
 	error = fclose(fHandle->mgmtInfo);
@@ -193,12 +193,14 @@ extern RC destroyPageFile (char *fileName){
  ****************************************************************/
 extern RC readBlock (int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage){
 
+  printf("Pages in file: %d || Page requested %d\n", fHandle->totalNumPages, pageNum);
   long error;
   if(fHandle == NULL){
 	  return RC_FILE_HANDLE_NOT_INIT;
   }
   
-  if(fHandle->totalNumPages < pageNum){
+  if(fHandle->totalNumPages <= pageNum){
+	  memPage = NULL;
 	  return RC_READ_NON_EXISTING_PAGE;
   }
   
