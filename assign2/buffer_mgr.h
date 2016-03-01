@@ -42,6 +42,7 @@ typedef struct pageList{
     PageNumber pgNum;
     int useCount;
     int fifoBit;
+    int hitrate;
     struct pageList *next;
 }pageListT;
 

@@ -45,10 +45,10 @@ main (void)
   initStorageManager();
   testName = "";
   
-  testCreatingAndReadingDummyPages(); //PARTIAL
-  testReadPage(); //DONE
-  testFIFO(); //DONE
-  //testLRU(); //PENDING
+  testCreatingAndReadingDummyPages(); 
+  testReadPage(); 
+  testFIFO(); 
+  testLRU();
 }
 
 // create n pages with content "Page X" and read them back to check whether the content is right
@@ -60,12 +60,12 @@ testCreatingAndReadingDummyPages (void)
 
   CHECK(createPageFile("testbuffer.bin"));
 
-  createDummyPages(bm, 22); //DONE
-  checkDummyPages(bm, 20);  //DONE
+  createDummyPages(bm, 22);
+  checkDummyPages(bm, 20);  
 
-  //createDummyPages(bm, 10000);
-  //checkDummyPages(bm, 10000);
-
+  createDummyPages(bm, 10000); 
+  checkDummyPages(bm, 9999); 
+  
   CHECK(destroyPageFile("testbuffer.bin"));
 
   free(bm);
@@ -76,7 +76,6 @@ testCreatingAndReadingDummyPages (void)
 void 
 createDummyPages(BM_BufferPool *bm, int num)
 {
-  printf("begin: createDummyPages\n");
   int i;
   BM_PageHandle *h = MAKE_PAGE_HANDLE();
 
@@ -84,7 +83,6 @@ createDummyPages(BM_BufferPool *bm, int num)
   
   for (i = 0; i < num; i++)
     {
-	  printf("For i : %d\n", i);	
       CHECK(pinPage(bm, h, i));
       
       sprintf(h->data, "%s-%i", "Page", h->pageNum);
@@ -98,7 +96,6 @@ createDummyPages(BM_BufferPool *bm, int num)
 void 
 checkDummyPages(BM_BufferPool *bm, int num)
 {
-  printf("checkDummyPages\n");
   int i;
   BM_PageHandle *h = MAKE_PAGE_HANDLE();
   char *expected = malloc(sizeof(char) * 512);
@@ -129,7 +126,6 @@ testReadPage ()
   testName = "Reading a page";
 
   CHECK(createPageFile("testbuffer.bin"));
-  printf("testReadPage: Done\n");
   CHECK(initBufferPool(bm, "testbuffer.bin", 3, RS_FIFO, NULL));
   
   CHECK(pinPage(bm, h, 0));
@@ -147,7 +143,6 @@ testReadPage ()
 
   free(bm);
   free(h);
-  printf("testReadPage: Done\n");
   TEST_DONE();
 }
 

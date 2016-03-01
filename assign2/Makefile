@@ -16,7 +16,7 @@ test_assign2_1.o: test_assign2_1.c
 	$(CC) -o test_assign2_1.o -c test_assign2_1.c	
 
 buffer_mgr.o: buffer_mgr.c
-	$(CC) -o buffer_mgr.o -c buffer_mgr.c
+	$(CC) -pthread -o buffer_mgr.o -c buffer_mgr.c
 
 buffer_mgr_stat.o: buffer_mgr_stat.c
 	$(CC) -o buffer_mgr_stat.o -c buffer_mgr_stat.c

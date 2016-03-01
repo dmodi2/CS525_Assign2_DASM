@@ -192,7 +192,6 @@ extern RC destroyPageFile (char *fileName){
  ****************************************************************/
 extern RC readBlock (int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage){
 
-  printf("Pages in file: %d || Page requested %d\n", fHandle->totalNumPages, pageNum);
   long error;
   if(fHandle == NULL){
 	  return RC_FILE_HANDLE_NOT_INIT;
