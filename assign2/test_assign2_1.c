@@ -64,7 +64,7 @@ testCreatingAndReadingDummyPages (void)
   checkDummyPages(bm, 20);  
 
   createDummyPages(bm, 10000); 
-  checkDummyPages(bm, 9999); 
+  checkDummyPages(bm, 10000); 
   
   CHECK(destroyPageFile("testbuffer.bin"));
 
@@ -102,7 +102,7 @@ checkDummyPages(BM_BufferPool *bm, int num)
 
   CHECK(initBufferPool(bm, "testbuffer.bin", 3, RS_FIFO, NULL));
 
-  for (i = 0; i < num; i++)
+  for (i = 0; i < num-1; i++)
     {
       CHECK(pinPage(bm, h, i));
 

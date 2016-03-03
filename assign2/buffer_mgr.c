@@ -5,6 +5,13 @@
 // Local libraries
 #include "buffer_mgr.h"
 
+
+/****************Thread Safe extra credit**********************/
+
+/***** Description: Mutex locks allows only single thread to execute the critical 
+ *                  section of the program by blocking all the other processes try to execute concurrently
+ *      
+ *       Author: Anirudh Deshpande  (adeshp17@hawk.iit.edu)      */
 static pthread_mutex_t mutex_init = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t mutex_unpinPage = PTHREAD_MUTEX_INITIALIZER; 
 static pthread_mutex_t mutex_pinPage = PTHREAD_MUTEX_INITIALIZER;  
@@ -15,15 +22,16 @@ pageListT *head = NULL;
 /***Replacement stratagies implementation****/
 
 /****************************************************************
- * Function Name: 
+ * Function Name: FIFO 
  * 
- * Description: 
+ * Description: Page replacement strategy to replace page frames
+ *               using first in first out algorithm.
  * 
- * Parameter: 
+ * Parameter: BM_BufferPool, pageListT
  * 
- * Return: 
+ * Return: RC (int)
  * 
- * Author:
+ * Author: Dhruvit Modi  (dmodi2@hawk.iit.edu)
  ****************************************************************/
 extern RC FIF0(BM_BufferPool *const bm, pageListT *pageT){
    
@@ -69,15 +77,16 @@ extern RC FIF0(BM_BufferPool *const bm, pageListT *pageT){
 
 
 /****************************************************************
- * Function Name: 
+ * Function Name: LRU 
  * 
- * Description: 
+ * Description: Page replacement strategy to replace page frames
+ *               using least recently used algorithm.
  * 
- * Parameter: 
+ * Parameter: BM_BufferPool, pageListT
  * 
- * Return: 
+ * Return: RC (int)
  * 
- * Author:
+ * Author: Dhruvit Modi  (dmodi2@hawk.iit.edu)
  ****************************************************************/
  extern RC LRU(BM_BufferPool *const bm,  pageListT *pageT)
 { 
@@ -115,16 +124,19 @@ extern RC FIF0(BM_BufferPool *const bm, pageListT *pageT){
     return RC_NO_UNPINNED_PAGES_IN_BUFFER_POOL;
 }
  
+/***Pool Handeling implementation****/
+
 /****************************************************************
- * Function Name: 
+ * Function Name: initBufferPool 
  * 
- * Description: 
+ * Description: Creates new buffer pool with numPages 
+ *                        
  * 
- * Parameter: 
+ * Parameter: BM_BufferPool, pageFileName, numPages, ReplacementStrategy, stratData
  * 
- * Return: 
+ * Return: RC (int)
  * 
- * Author:
+ * Author: Dhruvit Modi  (dmodi2@hawk.iit.edu)
  ****************************************************************/
 RC initBufferPool(BM_BufferPool *const bm, char *pageFileName,
                     const int numPages, ReplacementStrategy strategy,
@@ -162,9 +174,17 @@ RC initBufferPool(BM_BufferPool *const bm, char *pageFileName,
   return RC_OK;
 }
 
-/**
- * initPageFrame
- * */
+/****************************************************************
+ * Function Name: initPageFrame 
+ * 
+ * Description: Creates page frames to be accomodated in the buffer pool.
+ * 
+ * Parameter: pageListT
+ * 
+ * Return: RC (int)
+ * 
+ * Author: Dhruvit Modi  (dmodi2@hawk.iit.edu)
+ ****************************************************************/
 RC initPageFrame(pageListT* head_ref){
    
     //Represents a page in a frame.
@@ -183,9 +203,20 @@ RC initPageFrame(pageListT* head_ref){
     return RC_OK;
 }
 
-/**
- * shutdownBufferPool
- * */
+/****************************************************************
+ * Function Name: shutdownBufferPool 
+ * 
+ * Description: Destroyes the buffer pool and write all the dirty pages back 
+ *              to disk if any found.
+ * 
+ * Parameter: BM_BufferPool
+ * 
+ * Return: RC (int)
+ * 
+ * Author: Sahil Chalke  (schalke@hawk.iit.edu)
+ ****************************************************************/
+ 
+ 
 RC shutdownBufferPool(BM_BufferPool *const bm){
   if(bm == NULL){
       return RC_BUFFER_POOL_NOT_INIT;
@@ -205,9 +236,19 @@ RC shutdownBufferPool(BM_BufferPool *const bm){
   return RC_OK;
 }
 
-/**
- * forceFlushPool
- * */
+/****************************************************************
+ * Function Name: forceFlushPool
+ * 
+ * Description: Writes all dirty pages from Buffer pool to the disk.
+ * 
+ * Parameter: BM_BufferPool
+ * 
+ * Return: RC (int)
+ * 
+ * Author: Sahil Chalke  (schalke@hawk.iit.edu)
+ ****************************************************************/
+ 
+ 
 RC forceFlushPool(BM_BufferPool *const bm){
 	
   if(bm == NULL){
@@ -230,9 +271,22 @@ RC forceFlushPool(BM_BufferPool *const bm){
   }
   return RC_OK;
 }
-/**
- * markDirty
- * */
+
+/*****Buffer Manager Access implementation****/
+
+/****************************************************************
+ * Function Name: markDirty 
+ * 
+ * Description: Marks a page as a dirty page.
+ * 
+ * Parameter: BM_BufferPool, BM_PageHandle
+ * 
+ * Return: RC (int)
+ * 
+ * Author: Sahil Chalke  (schalke@hawk.iit.edu)
+ ****************************************************************/
+ 
+ 
 RC markDirty (BM_BufferPool *const bm, BM_PageHandle *const page){
  
   if(bm == NULL){
@@ -249,9 +303,22 @@ RC markDirty (BM_BufferPool *const bm, BM_PageHandle *const page){
   }
     return RC_PAGE_NOT_PINNED_IN_BUFFER_POOL;
 }
-/**
- * forcePage
- * */
+
+
+/****************************************************************
+ * Function Name: forcePage 
+ * 
+ * Description: Writes the current page content back to the 
+ *              pagefile on disk.
+ * 
+ * Parameter: BM_BufferPool, BM_PageHandle
+ * 
+ * Return: RC (int)
+ * 
+ * Author: Anirudh Deshpande  (adeshp17@hawk.iit.edu) 
+ ****************************************************************/
+
+
 RC forcePage (BM_BufferPool *const bm, BM_PageHandle *const page){
 
   if(bm == NULL){
@@ -277,9 +344,18 @@ RC forcePage (BM_BufferPool *const bm, BM_PageHandle *const page){
   return RC_OK;
 }
 
-/**
- * pinPage
- * */
+/****************************************************************
+ * Function Name: pinPage 
+ * 
+ * Description: Pins the page with page number pageNum.
+ * 
+ * Parameter: BM_BufferPool, BM_PageHandle, PageNumber
+ * 
+ * Return: RC (int)
+ * 
+ * Author: Anirudh Deshpande  (adeshp17@hawk.iit.edu) 
+ ****************************************************************/
+
 RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page,
         const PageNumber pageNum){
 			
@@ -377,6 +453,18 @@ RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page,
     }   
 }
 
+/****************************************************************
+ * Function Name: unpinPage 
+ * 
+ * Description: Unpins the page with page number pageNum.
+ * 
+ * Parameter: BM_BufferPool, BM_PageHandle
+ * 
+ * Return: RC (int)
+ * 
+ * Author: Anirudh Deshpande  (adeshp17@hawk.iit.edu) 
+ ****************************************************************/
+
 RC unpinPage(BM_BufferPool * const bm, BM_PageHandle * const page) {
    
     if(bm == NULL){
@@ -396,16 +484,62 @@ RC unpinPage(BM_BufferPool * const bm, BM_PageHandle * const page) {
  return RC_OK;
 }
 
+
+/*****Statistic Interface implementation****/
+
+/****************************************************************
+ * Function Name: getNumReadIO 
+ * 
+ * Description: Returns the number of pages that have been read 
+ *              from disk since a buffer pool has been initialized.
+ * 
+ * Parameter: BM_BufferPool.
+ * 
+ * Return: readCount (int)
+ * 
+ * Author: Sahil Chalke (schalke@hawk.iit.edu)
+ ****************************************************************/
+
+
 int getNumReadIO (BM_BufferPool *const bm){
 
        return readCount;
 
 }
 
+
+/****************************************************************
+ * Function Name: getNumWriteIO 
+ * 
+ * Description: Returns the number of pages written to the page
+ *              file since the buffer pool has been initialized.
+ * 
+ * Parameter: BM_BufferPool.
+ * 
+ * Return: writeCount (int)
+ * 
+ * Author: Monika Priyadarshani (mpriyad1@hawk.iit.edu)
+ ****************************************************************/
+
 int getNumWriteIO (BM_BufferPool *const bm){
 
           return writeCount;
 }
+
+
+/****************************************************************
+ * Function Name: getDirtyFlags
+ * 
+ * Description: Returns an boolean array of size numPages where if
+ *              a page is dirty the corresponding value is TRUE if  
+ *              not then FALSE.
+ * 
+ * Parameter: BM_BufferPool.
+ * 
+ * Return: flags (bool)
+ * 
+ * Author: Monika Priyadarshani (mpriyad1@hawk.iit.edu)
+ ****************************************************************/
 
 bool *getDirtyFlags(BM_BufferPool *const bm) {
    
@@ -422,6 +556,20 @@ bool *getDirtyFlags(BM_BufferPool *const bm) {
     return flags;
 }
 
+
+/****************************************************************
+ * Function Name: getFixCounts 
+ * 
+ * Description: Returns an integer array of size numPages where it
+ *              shows the fix count of a page either 0 or 1.
+ * 
+ * Parameter: BM_BufferPool.
+ * 
+ * Return: fixcount (int)
+ * 
+ * Author: Monika Priyadarshani (mpriyad1@hawk.iit.edu)
+ ****************************************************************/
+
 int *getFixCounts(BM_BufferPool *const bm) {
     int *fixcount = malloc(sizeof(bool) * bm->numPages);
    
@@ -436,7 +584,23 @@ int *getFixCounts(BM_BufferPool *const bm) {
     return fixcount;
 }
 
+
+/****************************************************************
+ * Function Name: getFrameContents 
+ * 
+ * Description: Returns a PageNumber array where each element has
+ *              the number of the page stored int page frame.
+ * 
+ * Parameter: BM_BufferPool.
+ * 
+ * Return: content (int)
+ * 
+ * Author: Monika Priyadarshani (mpriyad1@hawk.iit.edu)
+ ****************************************************************/
+
 PageNumber *getFrameContents(BM_BufferPool *const bm) {
+	
+	
     int *content = malloc(sizeof(int) * bm->numPages);
     pageListT *node = (pageListT *)bm->mgmtData;
     int i;
