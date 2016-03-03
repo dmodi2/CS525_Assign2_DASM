@@ -7,17 +7,17 @@ Buffer Manager can only hold specific number of file blocks in page frames it's 
 Highlights/Extras:
 ------------------
 
-•	Very High Performance (Takes ~13 sec on fourier for 1M pages' Read + Dirty + Write ops with only 3 page frames).
+â€¢	Very High Performance (Takes ~13 sec on fourier for 1M pages' Read + Dirty + Write ops with only 3 page frames).
    
-•	If a client requests pages not already present as blocks in underlying pageFile, we have to add new block to disk before that page is swapped out from pool.
+â€¢	If a client requests pages not already present as blocks in underlying pageFile, we have to add new block to disk before that page is swapped out from pool.
   
-•	Thread Safe, with optimizations to reduce lock overheads.
+â€¢	Thread Safe, with optimizations to reduce lock overheads.
    
-•	We have implemented pthread_mutex_t lock on initBufferPool, pinPage and unPinPage methods. This approach reduces waiting time compared to that caused by lock approach.
+â€¢	We have implemented pthread_mutex_t lock on initBufferPool, pinPage and unPinPage methods. This approach reduces waiting time compared to that caused by lock approach.
    
-•	Stress tested with 10M pages on fourier.
+â€¢	Stress tested with 10M pages on fourier.
 
-•	Simple design. Well organized code base.
+â€¢	Simple design. Well organized code base.
 
 I. Contents
 -----------
@@ -53,7 +53,7 @@ B. Methods
 * FIFO - Dhruvit Modi (dmodi2@hawk.iit.edu)
        	Page replacement strategy to replace page frames using first in first out algorithm.
 
-* LRU - Dhruvit Modi(dmodi2@hawk.iit.edu)
+* LRU - Anirudh Deshpande(adeshp17@hawk.iit.edu)
 	Page replacement strategy to replace page frames using least recently used algorithm.
 
 * Mutex Locks - Anirudh Deshpande(adeshp17@hawk.iit.edu)
@@ -97,7 +97,7 @@ B. Methods
 	RC_BUFFER_POOL_NOT_INIT
 	RC_PAGE_NOT_PINNED_IN_BUFFER_POOL
 	
-* pinPage - Anirudh Deshpande(adeshp17@hawk.iit.edu)
+* pinPage - Dhruvit Modi (dmodi2@hawk.iit.edu)
 	Pins page to an empty page frame if it doesn't already exist in any of the frames, otherwise data from already pinned page is returned.
 	Returns RC_OK on success, else following error codes are returned
 	RC_BUFFER_POOL_NOT_INIT
