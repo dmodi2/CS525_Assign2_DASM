@@ -86,7 +86,7 @@ extern RC FIF0(BM_BufferPool *const bm, pageListT *pageT){
  * 
  * Return: RC (int)
  * 
- * Author: Dhruvit Modi  (dmodi2@hawk.iit.edu)
+ * Author: Anirudh Deshpande  (adeshp17@hawk.iit.edu)
  ****************************************************************/
  extern RC LRU(BM_BufferPool *const bm,  pageListT *pageT)
 { 
@@ -353,7 +353,7 @@ RC forcePage (BM_BufferPool *const bm, BM_PageHandle *const page){
  * 
  * Return: RC (int)
  * 
- * Author: Anirudh Deshpande  (adeshp17@hawk.iit.edu) 
+ * Author: Dhruvit Modi  (dmodi2@hawk.iit.edu)
  ****************************************************************/
 
 RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page,
